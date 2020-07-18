@@ -14,7 +14,7 @@ var db *database.Db = new(database.Db)
 
 func bai1() {
 	var err error
-	_, err = db.ConnectBD()
+	err = db.ConnectBD()
 	err = db.CreateTable()
 	u := database.User{
 		Id:      xid.New().String(),
@@ -50,7 +50,7 @@ func bai1() {
 }
 func bai2() {
 	var err error
-	_, err = db.ConnectBD()
+	err = db.ConnectBD()
 	err = db.UpdateUser_Birth("bs80ea1cti8ra6i72ucg")
 	if err != nil {
 		panic(err)
@@ -72,11 +72,11 @@ func bai3() {
 }
 func b3_2() {
 	var err error
-	_, err = db.ConnectBD()
+	err = db.ConnectBD()
 	UserData := make(chan *database.User)
 	var wg sync.WaitGroup
 	rows, err := db.Engine.Rows(database.User{})
-	defer rows.Close()
+	//defer rows.Close()
 	bean := new(database.User)
 	for rows.Next() {
 		wg.Add(1)
@@ -96,7 +96,6 @@ func b3_2() {
 	wg.Wait()
 	for _, x := range done {
 		x <- true
-
 	}
 	time.Sleep(10 * time.Second)
 }

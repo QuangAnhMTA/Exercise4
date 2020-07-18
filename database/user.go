@@ -8,12 +8,12 @@ import (
 // user(id string, name string, birth int64, created int64, updated_at int64)
 
 type User struct {
-	Id      string
-	Name    string
-	Birth   int64
-	Created int64
-	Updated int64
-	Job     string
+	Id      string `json: "id"`
+	Name    string `json: "name"`
+	Birth   int64  `json: "birth"`
+	Created int64  `json; "create"`
+	Updated int64  `json:"updated"`
+	Job     string `json:"job"`
 }
 
 func (db *Db) InsertUser(u *User) error {
@@ -23,7 +23,11 @@ func (db *Db) InsertUser(u *User) error {
 		return err
 	}
 	log.Println(nb, "user dc them vao bang user")
-	_, err = db.Engine.Insert(Point{User_id: u.Id, Points: 10})
+	var p = Point{UserId: u.Id, Points: 10}
+	err = db.InsertPoint(&p)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func (db *Db) ListUser() (error, []User) {
@@ -43,11 +47,8 @@ func (db *Db) FindUser(id string) (error, *User) {
 	}
 	return nil, u
 }
-func (db *Db) UpdateUser(id string) error {
-	var u = new(User)
-	_, err := db.Engine.Table(User{}).Where("Id = ?", id).Get(&u)
-	u.Name = "Nguyen Van B"
-	_, err = db.Engine.Table(u).Where("Id = ?", id).Update(u)
+func (db *Db) UpdateUser(u User, Condition *User) error {
+	_, err := db.Engine.Update(u, Condition)
 	if err != nil {
 		return err
 	}
@@ -67,21 +68,21 @@ func (db *Db) UpdateUser_Birth(id string) error {
 	var p = new(Point)
 	_, err := session.Table(User{}).Where("Id = ?", id).Get(u)
 	if err != nil {
-		return err
+		session.Rollback()
 	}
 	u.Birth = time.Now().UnixNano()
 	if _, err := session.Table(u).Where("Id = ?", id).Update(u); err != nil {
-		return err
+		session.Rollback()
 	}
 
 	_, err = session.Table(p).Where("Id = ?", id).Get(p)
 	p.Points = p.Points + 10
 	if _, err := session.Cols("Points").Where("User_id = ?", id).Update(&Point{Points: p.Points + 10}); err != nil {
-		return err
+		session.Rollback()
 	}
 	u.Name = u.Name + "updated"
 	if _, err := session.Table(u).Where("Id = ?", id).Update(u); err != nil {
-		return err
+		session.Rollback()
 	}
 	return session.Commit()
 }
